@@ -4,7 +4,8 @@ apikey <- scan("apikey.txt", what="char")
 base_url <- "https://api.stockfighter.io/ob/api"
 get_quote <- function(venue, stock) {
     url <- paste(base_url,  "/venues/", venue, "/stocks/", stock, "/quote", sep="")
-    httr::GET(url=url)
+    res <- httr::GET(url=url)
+    return(res)
 }
 create_order <- function(account, venue, stock, price, qty, direction, orderType="limit"){
     res <- list(account=account, venue=venue, stock=stock,
@@ -25,13 +26,19 @@ parse_quote <- function(quote) {
         sapply(., unlist)  %>%
         do.call("rbind", .)
 }
-    
-test.df2  <- test.df %>% mutate(bid=as.fnumeric(bid),
-                                ask=as.fnumeric(ask),
-                                bidsize=as.fnumeric(bidSize),
-                                asksize=as.fnumeric(askSize),
-                                biddepth=as.fnumeric(bidDepth),
-                                askdepth=as.fnumeric(askDepth),
-                                last=as.fnumeric(ask),
-                                lasttrade=ymd_hms(lastTrade),
-                                quotetime=ymd_hms(quoteTime))
+repeat_call <- function(times, call) {
+    reslist <- list()
+    for(i in 1:times) {
+        reslist[[i]] <- eval(call)
+    }
+    reslist
+}
+## test.df2  <- test.df %>% mutate(bid=as.fnumeric(bid),
+##                                 ask=as.fnumeric(ask),
+##                                 bidsize=as.fnumeric(bidSize),
+##                                 asksize=as.fnumeric(askSize),
+##                                 biddepth=as.fnumeric(bidDepth),
+##                                 askdepth=as.fnumeric(askDepth),
+##                                 last=as.fnumeric(ask),
+##                                 lasttrade=ymd_hms(lastTrade),
+##                                 quotetime=ymd_hms(quoteTime))
