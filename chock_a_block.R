@@ -1,29 +1,50 @@
+rm(list=ls())
 library(dplyr)
 library(lubridate)
 source("starfighter.R")
-account <- "DSW16066231"
+account <- "PFB33597514"
 key <- scan("apikey.txt", what="char")
-venue <- "YHSUEX"
-stock <- "TWC"
-bid <- 2850
-## ord <- create_order(account=account, venue=venue, stock=stock, price=bid, qty=1000, direction="buy", orderType="limit")
-## for(i in 1:100) {
-##     place_order(venue=venue, stock=stock, body=ord, apikey=key)
-##     Sys.sleep(10)
-## }
-## qlist <- list()
-## for(i in 1:100) {
-##     qlist[[i]] <- get_quote(venue=venue, stock=stock)
-## }
+venue <- "SABEX"
+stock <- "IROQ"
+fudge <- 0.00
+orderinfo <- get_first_real_price(venue=venue, stock=stock, fudge=fudge)
+orig_price <- NA
+if(is.na(orig_price)) {
+    cat("first bid ", orderinfo[1], "\n") 
+    orig_price <- orderinfo[1]
+    cat("original price was ", orig_price, "\n")
+    Sys.sleep(5)
+}
+target_price <- NA
+if(is.na(target_price)) {
+    target_price <- floor(orderinfo[1])
+    cat("target_price is", target_price, "\n")
+}
+last_price <- 0
+total_filled <- 0
+asking_price <- orig_price
+while(total_filled<100000) {
+bid <- target_price
+qty <- orderinfo[2]
+ord <- create_order(account=account, venue=venue, stock=stock, price=bid, qty=qty, direction="buy", orderType="immediate-or-cancel")
+cat("asking price", asking_price, "target price ", target_price, "\n")
+asking_price <- get_first_real_price(venue, stock, fudge=0)[1]
+if(asking_price<=target_price) {
+    t <- place_order(venue=venue, stock=stock, body=ord, apikey=key)
+}
+if(content(t)$ok) {
+    total_filled <- total_filled+content(t)$totalFilled
+    cat(total_filled, " shares purchased", "\n")
+    new_quote <- get_first_real_price(venue, stock)
+    asking_price <- new_quote[1]
+    cat("new ask ", new_quote[1], " available ", new_quote[2]*100, "\n")
+    new_qty <- new_quote[2]
+    if(total_filled>99000) {
+        cat("Getting close", total_filled, "shares purchased", "\n")
+    }
+}
+else {
+    Sys.sleep(60)
+}
+}
 
-quotes <- repeat_call(100, call=function() get_quote(venue, stock), sleep=1)
-parsed <- parse_quote(quotes)
-## test.df2  <- test.df %>% mutate(bid=as.fnumeric(bid),
-##                                 ask=as.fnumeric(ask),
-##                                 bidsize=as.fnumeric(bidSize),
-##                                 asksize=as.fnumeric(askSize),
-##                                 biddepth=as.fnumeric(bidDepth),
-##                                 askdepth=as.fnumeric(askDepth),
-##                                 last=as.fnumeric(ask),
-##                                 lasttrade=ymd_hms(lastTrade),
-##                                 quotetime=ymd_hms(quoteTime))
