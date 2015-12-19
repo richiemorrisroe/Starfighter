@@ -16,7 +16,8 @@ bid <- 2850
 ##     qlist[[i]] <- get_quote(venue=venue, stock=stock)
 ## }
 
-quotes <- repeat_call(100, call=function() get_quote(venue, stock))
+quotes <- repeat_call(100, call=function() get_quote(venue, stock), sleep=1)
+parsed <- parse_quote(quotes)
 ## test.df2  <- test.df %>% mutate(bid=as.fnumeric(bid),
 ##                                 ask=as.fnumeric(ask),
 ##                                 bidsize=as.fnumeric(bidSize),
