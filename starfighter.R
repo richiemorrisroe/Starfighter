@@ -21,11 +21,39 @@ as.fnumeric <- function(x) {
 }
 
 parse_quote <- function(quote) {
-    quotecontents <-
-        sapply(quote, content) %>%
-        sapply(., unlist)  %>%
-        do.call("rbind", .)
+    quotecontents <- sapply(quote, function(x) content(x))
+    numrows <- length(quotecontents)
+    numcols <- max(sapply(quotecontents, length))
+    resmat <- matrix(data=NA, nrow=numrows, ncol=numcols)
+    nameextractors <- tolower(names(quotecontents[[1]]))
+    
+    for(i in 1:length(nameextractors)) {
+        fun <- get_component(component=nameextractors[1])
+        browser()
+        part <- fun(x=quotecontents)
+        resmat[1:length(part),i] <- part
+    }
+    resmat
+    
+}    
+
+get_component <- function(x, component) {
+    res <- function (x) sapply(x, "[[", component=component)
 }
+ok <- get_component(component="ok")
+symbol <- get_component(component="symbol")
+venue <- get_component(component="venue")
+bid <- get_component(component="bid")
+ask <- get_component(component="ask")
+bidsize <- get_component(component="bidSize")
+asksize <- get_component(component="askSize")
+biddepth <- get_component(component="bidDepth")
+askdepth <- get_component(component="askDepth")
+last <- get_component(component="last")
+lastsize <- get_component(component="lastSize")
+lasttrade <- get_component(component="lastTrade")
+quotetime <- get_component(component="quoteTime")
+
 ##man i really want this to work
 ##it doesn't though, suggesting I'm missing something subtle
 repeat_call <- function(times, call, sleep=10) {
