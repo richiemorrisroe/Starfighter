@@ -26,12 +26,19 @@ parse_quote <- function(quote) {
         sapply(., unlist)  %>%
         do.call("rbind", .)
 }
+##man i really want this to work
+##it doesn't though, suggesting I'm missing something subtle
 repeat_call <- function(times, call) {
     reslist <- list()
+    fun <- match.fun(call)
     for(i in 1:times) {
-        reslist[[i]] <- eval(call)
+        reslist[[i]] <- fun()
+        Sys.sleep(10)
     }
     reslist
+}
+as.fnumeric <- function(x) {
+    as.numeric(as.character(x))
 }
 ## test.df2  <- test.df %>% mutate(bid=as.fnumeric(bid),
 ##                                 ask=as.fnumeric(ask),
