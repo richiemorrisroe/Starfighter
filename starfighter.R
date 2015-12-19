@@ -28,12 +28,14 @@ parse_quote <- function(quote) {
 }
 ##man i really want this to work
 ##it doesn't though, suggesting I'm missing something subtle
-repeat_call <- function(times, call) {
+repeat_call <- function(times, call, sleep=10) {
     reslist <- list()
     fun <- match.fun(call)
     for(i in 1:times) {
         reslist[[i]] <- fun()
-        Sys.sleep(10)
+        if(sleep) {
+            Sys.sleep(sleep)
+        }
     }
     reslist
 }
