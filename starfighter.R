@@ -34,7 +34,6 @@ parse_quote <- function(quote) {
         resmat[1:length(part),i] <- part
     }
     resmat
-    
 }    
 
 get_component <- function(x, component) {
@@ -70,6 +69,37 @@ repeat_call <- function(times, call, sleep=10) {
 as.fnumeric <- function(x) {
     as.numeric(as.character(x))
 }
+
+get_bid <- function(quote, fudge=0) {
+    ask.cur <- quote$ask
+    if(is.null(ask.cur)) {
+        fudged_bid <- NA
+    }
+    else {
+        fudged_bid <- floor(ask.cur*(fudge+1))
+    }
+    askSize <- quote$askSize
+    if(is.null(askSize)) {
+        qty <- NA
+    }
+    else {
+        qty <- floor(askSize/100)
+    }
+    state <- c(fudged_bid, qty)
+    
+}
+
+get_first_real_price <- function (venue, stock, fudge=0) {
+    fudged_bid <- NA
+    qty <- NA
+    while(is.na(fudged_bid) | is.na(qty)) {
+        orderinfo <- get_bid(content(get_quote(venue, stock)))
+        fudged_bid <- orderinfo[1]
+        qty <- orderinfo[2]
+    }
+    res <- c(fudged_bid, qty)
+}
+        
 ## test.df2  <- test.df %>% mutate(bid=as.fnumeric(bid),
 ##                                 ask=as.fnumeric(ask),
 ##                                 bidsize=as.fnumeric(bidSize),
