@@ -7,6 +7,10 @@ get_quote <- function(venue, stock) {
     res <- httr::GET(url=url)
     return(res)
 }
+get_orderbook <- function(venue, stock) {
+    url <- paste(base_url, "/venues/", venue, "/stocks/", stock, sep="")
+    res <- httr::GET(url=url)
+}
 create_order <- function(account, venue, stock, price, qty, direction, orderType="limit"){
     res <- list(account=account, venue=venue, stock=stock,
                 price=price, qty=qty, direction=direction, orderType=orderType)
