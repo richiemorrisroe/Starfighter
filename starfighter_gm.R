@@ -1,8 +1,32 @@
 library(httr)
-base_url <- "https://www.stockfighter.io/gm/levels/"
+base_url <- "https://www.stockfighter.io/gm/"
 apikey <- scan("apikey.txt", what="char")
 start_level <- function(level="first_steps") {
-    url <- paste(base_url, level, sep="")
+    base_url <- "https://www.stockfighter.io/gm/levels/"
+    url <- paste(base_url, "/",level, sep="")
     res <- httr::POST(url, add_headers("X-Starfighter-Authorization"=apikey))
 }
+change_instance <- function(level, action) {
+    level_data <- content(level)
+    instance_id <- level_data[["instanceId"]]
+    url <- paste(base_url, "instances/", instance_id, "/", action, sep="")
+    if(action %in% c("stop", "resume")) {
+        res <- httr::POST(url=url, add_headers("X-Starfighter-Authorization"=apikey), verbose())
+    }
+    else {
+        res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey), verbose())}
+    res
+}
+level_status <- function(level, ...)  {
+    instance <- content(level)[["instanceId"]]
+    url <- paste(base_url, "instances/", instance, sep="")
+    print(url)
+    res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey), ...)
     
+}
+get_tickertape <- function(account, venue, ...) {
+    base_ws<- "https://www.stockfighter.io/ob/api/"
+    url <- paste(base_ws, account, "/venues/", venue, "/tickertape", sep="")
+    res <- httr::GET(url, add_headers(api_key=apikey), ...)
+    return(res)
+}
