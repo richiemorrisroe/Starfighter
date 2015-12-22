@@ -113,3 +113,13 @@ get_first_real_price <- function (venue, stock, fudge=0) {
 ##                                 last=as.fnumeric(ask),
 ##                                 lasttrade=ymd_hms(lastTrade),
 ##                                 quotetime=ymd_hms(quoteTime))
+parse_response <- function (response) {
+    content <- content(response, as="text")
+    parsed <- jsonlite::fromJSON(content)
+
+}
+response_to_df <- function(parsed_response) {
+    parsedmat <- do.call("rbind", parsed_response)
+    parsed.df <- sapply(as.data.frame(parsedmat), unlist)
+    parsed.df
+}
