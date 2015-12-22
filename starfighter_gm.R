@@ -1,15 +1,15 @@
 library(httr)
-base_url <- "https://www.stockfighter.io/gm/"
+base_gm <- "https://www.stockfighter.io/gm/"
 apikey <- scan("apikey.txt", what="char")
 start_level <- function(level="first_steps") {
-    base_url <- "https://www.stockfighter.io/gm/levels/"
-    url <- paste(base_url, "/",level, sep="")
+    base_gm <- "https://www.stockfighter.io/gm/levels/"
+    url <- paste(base_gm, "/",level, sep="")
     res <- httr::POST(url, add_headers("X-Starfighter-Authorization"=apikey))
 }
 change_instance <- function(level, action) {
     level_data <- content(level)
     instance_id <- level_data[["instanceId"]]
-    url <- paste(base_url, "instances/", instance_id, "/", action, sep="")
+    url <- paste(base_gm, "instances/", instance_id, "/", action, sep="")
     if(action %in% c("stop", "resume")) {
         res <- httr::POST(url=url, add_headers("X-Starfighter-Authorization"=apikey), verbose())
     }
@@ -19,8 +19,7 @@ change_instance <- function(level, action) {
 }
 level_status <- function(level, ...)  {
     instance <- content(level)[["instanceId"]]
-    url <- paste(base_url, "instances/", instance, sep="")
-    print(url)
+    url <- paste(base_gm, "instances/", instance, sep="")
     res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey), ...)
     
 }
