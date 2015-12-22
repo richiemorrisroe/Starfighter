@@ -1,14 +1,21 @@
 ## rm(list=ls())
 library(dplyr)
 library(lubridate)
+source("starfighter_gm.R")
 source("starfighter.R")
-account <- "MS45612558"
+
+first <- start_level("chock_a_block")
+contents_level <- content(first)
+venue <- unlist(contents_level[["venues"]])
+ticker <- unlist(contents_level[["tickers"]])
+instance <- unlist(contents_level[["instanceId"]])
+account <- unlist(contents_level[["account"]])
+daylength <- unlist(contents_level[["secondsPerTradingDay"]])
+
 key <- scan("apikey.txt", what="char")
-venue <- "VHIPEX"
-stock <- "CHC"
 fudge <- 0.00
 ## Sys.sleep(100)
-orderinfo <- get_first_real_price(venue=venue, stock=stock, fudge=fudge)
+orderinfo <- get_orderbook(venue=venue, stock=ticker)
 orig_price <- NA
 if(is.na(orig_price)) {
     cat("first bid ", orderinfo[1], "\n") 
@@ -23,26 +30,17 @@ if(is.na(target_price)) {
 last_price <- 0
 total_filled <- 0
 asking_price <- orig_price
-ok <- TRUE
-i <- 1
-ordlist <- vector(mode="list", length=100000)
-while(ok) {
-    orders <- get_orderbook(venue, stock)
-    ordlist[[i]] <- orders
-    i <- i + 1 
-    ok <- content(orders)$ok
-    
-}
+
 
 ## while(total_filled<100000) {
-## bid <- target_price
+bid <- 10000
 ## qty <- orderinfo[2]
-## ord <- create_order(account=account, venue=venue, stock=stock, price=bid, qty=qty, direction="buy", orderType="immediate-or-cancel")
-## cat("asking price", asking_price, "target price ", target_price, "\n")
-## asking_price <- get_first_real_price(venue, stock, fudge=0)[1]
-## if(asking_price<=target_price) {
-##     t <- place_order(venue=venue, stock=stock, body=ord, apikey=key)
-## }
+ord <- create_order(account=account, venue=venue, stock=ticker, price=bid, qty=1000, direction="buy", orderType="immediate-or-cancel")
+cat("asking price", asking_price, "target price ", target_price, "\n")
+asking_price <- get_first_real_price(venue, stock, fudge=0)[1]
+if(asking_price<=target_price) {
+    t <- place_order(venue=venue, stock=stock, body=ord, apikey=key)
+}
 ## if(content(t)$ok) {
 ##     total_filled <- total_filled+content(t)$totalFilled
 ##     cat(total_filled, " shares purchased", "\n")
