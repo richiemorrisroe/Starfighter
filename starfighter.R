@@ -3,7 +3,7 @@ require(dplyr)
 apikey <- scan("apikey.txt", what="char")
 base_url <- "https://api.stockfighter.io/ob/api/"
 get_quote <- function(venue, stock) {
-    url <- paste(base_url,  "/venues/", venue, "/stocks/", stock, "/quote", sep="")
+    url <- paste(base_url,  "venues/", venue, "/stocks/", stock, "/quote", sep="")
     res <- httr::GET(url=url)
     return(res)
 }
@@ -117,6 +117,14 @@ parse_response <- function (response) {
     content <- content(response, as="text")
     parsed <- jsonlite::fromJSON(content)
 
+}
+get_bids <- function(bid) {
+    if(is.null(bid)) {
+        return(NA)
+    }
+    else {
+        return(bid)
+    }
 }
 response_to_df <- function(parsed_response) {
     parsedmat <- do.call("rbind", parsed_response)
