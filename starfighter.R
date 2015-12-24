@@ -131,3 +131,9 @@ response_to_df <- function(parsed_response) {
     parsed.df <- sapply(as.data.frame(parsedmat), unlist)
     parsed.df
 }
+get_tickertape <- function(account, venue) {
+    ##sadface, Curl (and thus httr) doesn't support websockets
+    base_url_wss <- "wss://api.stockfighter.io/ob/api/ws/"
+    url <- paste(base_url_wss, account, "/venues/", venue, "/tickertape", sep="")
+    res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey))
+}
