@@ -2,7 +2,7 @@ require(httr)
 source("starfighter_gm.R")
 source("starfighter.R")
 ## level <- start_level("chock_a_block")
-first <- start_level("chock_a_block")
+first <- start_level("sell_side")
 contents_level <- content(first)
 venue <- unlist(contents_level[["venues"]])
 ticker <- unlist(contents_level[["tickers"]])
@@ -26,11 +26,11 @@ monitor <- function(venue, stock) {
     }
     }, finally = {
         cat("reached finally", "\n")
-        save(ordlist, file="orders_list.rda")
+        save(ordlist, file="orders_list_sell_side.rda")
     })
     ordlist
 }
 
 
 mon <- monitor(venue=venue, stock=ticker)
-save(mon, file="orders_list_test.rda")
+save(mon, file="orders_list_sell_side.rda")
