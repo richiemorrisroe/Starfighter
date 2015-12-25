@@ -154,7 +154,7 @@ spreads.orderbook <- function(orderbook) {
 }
 df_or_null <- function(order, component) {
     if(is.null(order[[component]])) {
-        order[[component]] <- data.frame(price=NULL, qty=NULL, isBuy=NULL)
+        order[[component]] <- data.frame(price=NA, qty=NA, isBuy=NA)
     }
     order
 }
@@ -174,8 +174,13 @@ orderbook <- function(order) {
     orderbook
     }
 }
-orderbook.loop <- list()
-for(i in 1:length(ss.parsed)) {
-    print(i)
-    orderbook.loop[[i]] <- orderbook(ss.parsed[[i]])
+## orderbook.loop <- list()
+## for(i in 1:length(ss.parsed)) {
+##     print(i)
+##     orderbook.loop[[i]] <- orderbook(ss.parsed[[i]])
+## }
+parse_ts <- function(order) {
+    myts <- lubridate::ymd_hms(order[["ts"]])
+    millis <- strsplit(order[["ts"]], ".", fixed=TRUE)
+    print(millis)
 }
