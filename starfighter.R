@@ -162,7 +162,7 @@ df_or_null <- function(order, component) {
 orderbook <- function(order) {
     order <- df_or_null(order, "bids")
     order <- df_or_null(order, "asks")
-    order <- order[order$ok==TRUE]
+    if(is.null(order$error)) {
     orderbook <- with(order,
          new("orderbook",
              ok=ok,
@@ -172,6 +172,7 @@ orderbook <- function(order) {
              bids=bids,
              asks=asks))
     orderbook
+    }
 }
 orderbook.loop <- list()
 for(i in 1:length(ss.parsed)) {
