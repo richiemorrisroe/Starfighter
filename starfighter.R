@@ -149,12 +149,12 @@ spreads.orderbook <- function(orderbook) {
     interval <- orderbook@milliseconds
     biddims <- dim(na.omit(bids))
     askdims <- dim(na.omit(asks))
-    if(biddims[1]>0 & askdims[1]>0) {
+    if(biddims[1]==askdims[1] & askdims[1]>0) {
     spread <- data.frame(bid_price=bids$price,
                          bid_qty=bids$qty,
                          ask_price=asks$price,
                          ask_qty=asks$qty) %>%
-        mutate(diff_price=ask_price-bid_price)
+        dplyr::mutate(diff_price=ask_price-bid_price)
     }
     else {
         spread <- data.frame(bid_price=NA,
