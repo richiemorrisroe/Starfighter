@@ -139,17 +139,30 @@ get_tickertape <- function(account, venue) {
 }
 setClass("orderbook",
          slots = list(ok="logical", venue="character",
-                      symbol="character", ts="character",
+                      symbol="character", ymdhms="POSIXt",
+                      milliseconds="numeric",
                       bids="data.frame", asks="data.frame"))
 
 spreads.orderbook <- function(orderbook) {
     bids <- orderbook@bids
     asks <- orderbook@asks
+    interval <- orderbook@milliseconds
+    biddims <- dim(na.omit(bids))
+    askdims <- dim(na.omit(asks))
+    if(biddims[1]>0 & askdims[1]>0) {
     spread <- data.frame(bid_price=bids$price,
                          bid_qty=bids$qty,
                          ask_price=asks$price,
                          ask_qty=asks$qty) %>%
         mutate(diff_price=ask_price-bid_price)
+    }
+    else {
+        spread <- data.frame(bid_price=NA,
+                             bid_qty=NA,
+                             ask_price=NA,
+                             ask_qty=NA,
+                             diff_price=NA)
+    }
     spread
 }
 df_or_null <- function(order, component) {
@@ -163,24 +176,30 @@ orderbook <- function(order) {
     order <- df_or_null(order, "bids")
     order <- df_or_null(order, "asks")
     if(is.null(order$error)) {
+        tsparsed <- parse_ts(order)
+    }
+    if(is.null(order$error)) {
     orderbook <- with(order,
          new("orderbook",
              ok=ok,
              venue=venue,
              symbol=symbol,
-             ts=ts,
+             ymdhms=tsparsed[,1],
+             milliseconds=tsparsed[,2],
              bids=bids,
              asks=asks))
     orderbook
     }
 }
-## orderbook.loop <- list()
-## for(i in 1:length(ss.parsed)) {
-##     print(i)
-##     orderbook.loop[[i]] <- orderbook(ss.parsed[[i]])
-## }
+orderbook.loop <- list()
+for(i in 1:length(ss.parsed)) {
+    print(i)
+    orderbook.loop[[i]] <- orderbook(ss.parsed[[i]])
+}
 parse_ts <- function(order) {
     myts <- lubridate::ymd_hms(order[["ts"]])
-    millis <- strsplit(order[["ts"]], ".", fixed=TRUE)
-    print(millis)
+    split <- unlist(strsplit(order[["ts"]], ".", fixed=TRUE))
+    millis <- stringr::str_extract(split[2], "[0-9]+")
+    df <- return(data.frame(ymdhms=myts, milli=as.numeric(millis)))
+
 }
