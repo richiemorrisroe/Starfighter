@@ -191,15 +191,20 @@ orderbook <- function(order) {
     orderbook
     }
 }
-orderbook.loop <- list()
-for(i in 1:length(ss.parsed)) {
-    print(i)
-    orderbook.loop[[i]] <- orderbook(ss.parsed[[i]])
-}
+## orderbook.loop <- list()
+## for(i in 1:length(ss.parsed)) {
+##     print(i)
+##     orderbook.loop[[i]] <- orderbook(ss.parsed[[i]])
+## }
 parse_ts <- function(order) {
     myts <- lubridate::ymd_hms(order[["ts"]])
     split <- unlist(strsplit(order[["ts"]], ".", fixed=TRUE))
     millis <- stringr::str_extract(split[2], "[0-9]+")
     df <- return(data.frame(ymdhms=myts, milli=as.numeric(millis)))
 
+}
+get_component <- function(level, component) {
+    levelcon <- parse_response(level)
+    component <- unlist(levelcon[[component]])
+    component
 }
