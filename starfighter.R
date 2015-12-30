@@ -154,7 +154,20 @@ setClass("quote",
                     last="integer",
                     lastSize="integer",
                     lastTrade="character",
-                    quoteTime="character"))
+                    quoteTime="character"),
+         prototype=prototype(ok=NA,
+                    venue=NA_character_,
+                    symbol=NA_character_,
+                    bid=NA_integer_,
+                    bidSize=NA_integer_,
+                    askSize=NA_integer_,
+                    bidDepth=NA_integer_,
+                    askDepth=NA_integer_,
+                    last=NA_integer_,
+                    lastSize=NA_integer_,
+                    lastTrade=NA_character_,
+                    quoteTime=NA_character_),
+         contains="vector")
 spreads.orderbook <- function(orderbook) {
     bids <- orderbook@bids
     asks <- orderbook@asks
@@ -203,29 +216,31 @@ orderbook <- function(order) {
     orderbook
     }
 }
+## obj_or_null <- function (object, data) {
+##     ifelse(
+quote_fields <- function(quote) {}
 new_quote <- function(quote) {
+    q <- new("quote")
     quote2 <- lapply(quote, function(x) ifelse(is.null(x), NA, x))
-    browser()
-    q <- new("quote",
-             ok=quote2$ok,
-                    venue=quote2$venue,
-                    symbol=quote2$symbol,
-                    bid=quote2$bid,
-                    bidSize=quote2$bidSize,
-                    askSize=quote2$askSize,
-                    bidDepth=quote2$bidDepth,
-                    askDepth=quote2$askDepth,
-                    last=quote2$last,
-                    lastSize=quote2$lastSize,
-                    lastTrade=quote2$lastTrade,
-             quoteTime=quote2$quoteTime)
+    q@ok <- ifelse(!is.null(quote2$ok), quote2$ok, q@ok)
+    q@venue <- ifelse(!is.null(quote2$venue), quote2$venue, q@venue) 
+    q@symbol <- ifelse(!is.null(quote2$symbol), quote2$symbol, q@symbol) 
+    q@bid <- ifelse(!is.null(quote2$bid), quote2$bid, q@bid) 
+    q@bidSize <- ifelse(!is.null(quote2$bidSize), quote2$bidSize, q@bidSize)
+    q@askSize <- ifelse(!is.null(quote2$askSize), quote2$askSize, q@askSize)
+    q@bidDepth <- ifelse(!is.null(quote2$bidDepth), quote2$bidDepth, q@bidDepth)
+    q@askDepth <- ifelse(!is.null(quote2$askDepth), quote2$askDepth, q@askDepth)
+    q@last <- ifelse(!is.null(quote2$last), quote2$last, q@last)
+    q@lastSize <- ifelse(!is.null(quote2$lastSize), quote2$lastSize, q@lastSize)
+    q@lastTrade <- ifelse(!is.null(quote2$lastTrade), quote2$lastTrade, q@lastTrade)
+    q@quoteTime <- ifelse(!is.null(quote2$quoteTime), quote2$quoteTime, q@quoteTime)
     q
 }
-orderbook.t <- list()
-for(i in 1:length(quotes.parsed2)) {
-    print(i)
-    orderbook.t[[i]] <- new_quote(quotes.parsed[[i]])
-}
+## orderbook.t <- list()
+## for(i in 1:length(quotes.parsed2)) {
+##     print(i)
+##     orderbook.t[[i]] <- new_quote(quotes.parsed[[i]])
+## }
 parse_ts <- function(order) {
     myts <- lubridate::ymd_hms(order[["ts"]])
     split <- unlist(strsplit(order[["ts"]], ".", fixed=TRUE))
@@ -257,4 +272,40 @@ get_all_orders <- function(venue, account) {
     url <- paste(base_url, "venues/", venue, "/accounts/", account, "/orders/", sep="")
     res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey))
     res
+}
+qlist_to_df <- function(quotelist) {
+    stopifnot(class(quotelist[[1]])=="quote")
+    matrows <- length(quotelist)
+    matcols <- length(getSlots("quote"))-1
+    resmat <- matrix(data=NA, nrow=matrows, ncol=matcols)
+    for(i in 1:length(quotelist)) {
+        resmat[i,] <- as.vector.quote(quotelist[[i]])
+    }
+    resmat
+    colnames(resmat) <- names(getSlots("quote")[2:length(getSlots("quote"))])
+    resdf <- as.data.frame(resmat)
+    resdf <- dplyr::mutate(resdf, ok=as.logical(ok),
+                    bid=as.fnumeric(bid),
+                    bidSize=as.fnumeric(bidSize),
+                    askSize=as.fnumeric(askSize),
+                    bidDepth=as.fnumeric(bidDepth),
+                    last=as.fnumeric(last),
+                    lastSize=as.fnumeric(lastSize))
+    resdf
+                    
+                                 
+}
+as.vector.quote <- function(quote) {
+    res <- c(quote@ok,
+    quote@venue ,
+    quote@symbol ,
+    quote@bid ,
+    quote@bidSize ,
+    quote@askSize ,
+    quote@bidDepth ,
+    quote@askDepth ,
+    quote@last ,
+    quote@lastSize ,
+    quote@lastTrade ,
+    quote@quoteTime )
 }
