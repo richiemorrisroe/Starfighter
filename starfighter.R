@@ -142,7 +142,19 @@ setClass("orderbook",
                       symbol="character", ymdhms="POSIXt",
                       milliseconds="numeric",
                       bids="data.frame", asks="data.frame"))
-
+setClass("quote",
+         slots=list(ok="logical",
+                    venue="character",
+                    symbol="character",
+                    bid="integer",
+                    bidSize="integer",
+                    askSize="integer",
+                    bidDepth="integer",
+                    askDepth="integer",
+                    last="integer",
+                    lastSize="integer",
+                    lastTrade="character",
+                    quoteTime="character"))
 spreads.orderbook <- function(orderbook) {
     bids <- orderbook@bids
     asks <- orderbook@asks
@@ -191,11 +203,29 @@ orderbook <- function(order) {
     orderbook
     }
 }
-## orderbook.loop <- list()
-## for(i in 1:length(ss.parsed)) {
-##     print(i)
-##     orderbook.loop[[i]] <- orderbook(ss.parsed[[i]])
-## }
+new_quote <- function(quote) {
+    quote2 <- lapply(quote, function(x) ifelse(is.null(x), NA, x))
+    browser()
+    q <- new("quote",
+             ok=quote2$ok,
+                    venue=quote2$venue,
+                    symbol=quote2$symbol,
+                    bid=quote2$bid,
+                    bidSize=quote2$bidSize,
+                    askSize=quote2$askSize,
+                    bidDepth=quote2$bidDepth,
+                    askDepth=quote2$askDepth,
+                    last=quote2$last,
+                    lastSize=quote2$lastSize,
+                    lastTrade=quote2$lastTrade,
+             quoteTime=quote2$quoteTime)
+    q
+}
+orderbook.t <- list()
+for(i in 1:length(quotes.parsed2)) {
+    print(i)
+    orderbook.t[[i]] <- new_quote(quotes.parsed[[i]])
+}
 parse_ts <- function(order) {
     myts <- lubridate::ymd_hms(order[["ts"]])
     split <- unlist(strsplit(order[["ts"]], ".", fixed=TRUE))
@@ -207,4 +237,24 @@ get_component <- function(level, component) {
     levelcon <- parse_response(level)
     component <- unlist(levelcon[[component]])
     component
+}
+get_tickers <- function(venue) {
+    url <- paste(base_url, "venues/", venue, "/stocks/", sep="")
+    res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey))
+    res
+}
+get_order_status <- function(id, venue, stock) {
+    url <- paste(base_url, "venues/", venue, "/stocks/", stock, "/orders/", id, sep="")
+    res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey))
+    res
+}
+cancel_order <- function(id, venue, stock) {
+    url <- paste(base_url, "venues/", venue, "/stocks/", stock, "/orders/", id, sep="")
+    res <- httr::DELETE(url, add_headers("X-Starfighter-Authorization"=apikey))
+    res
+}
+get_all_orders <- function(venue, account) {
+    url <- paste(base_url, "venues/", venue, "/accounts/", account, "/orders/", sep="")
+    res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey))
+    res
 }
