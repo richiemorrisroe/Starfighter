@@ -10,6 +10,8 @@ change_instance <- function(level, action) {
     level_data <- content(level)
     instance_id <- level_data[["instanceId"]]
     url <- paste(base_gm, "instances/", instance_id, "/", action, sep="")
+    print(instance_id)
+    print(url)
     if(action %in% c("stop", "resume")) {
         res <- httr::POST(url=url, add_headers("X-Starfighter-Authorization"=apikey), verbose())
     }
