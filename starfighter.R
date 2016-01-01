@@ -313,3 +313,9 @@ as.vector.quote <- function(quote) {
     quote@lastTrade ,
     quote@quoteTime )
 }
+get_tickertape <- function(account, venue, ...) {
+    base_ws<- "https://www.stockfighter.io/ob/api/"
+    url <- paste(base_ws, account, "/venues/", venue, "/tickertape", sep="")
+    res <- httr::GET(url, add_headers(api_key=apikey), ...)
+    return(res)
+}

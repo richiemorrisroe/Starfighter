@@ -25,9 +25,4 @@ level_status <- function(level, ...)  {
     res <- httr::GET(url, add_headers("X-Starfighter-Authorization"=apikey), ...)
     
 }
-get_tickertape <- function(account, venue, ...) {
-    base_ws<- "https://www.stockfighter.io/ob/api/"
-    url <- paste(base_ws, account, "/venues/", venue, "/tickertape", sep="")
-    res <- httr::GET(url, add_headers(api_key=apikey), ...)
-    return(res)
-}
+
