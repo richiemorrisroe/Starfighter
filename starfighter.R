@@ -2,9 +2,10 @@ require(httr)
 require(dplyr)
 apikey <- scan("apikey.txt", what="char")
 base_url <- "https://api.stockfighter.io/ob/api/"
-get_quote <- function(venue, stock) {
+options(fractional.seconds=7)
+get_quote <- function(venue, stock, ...) {
     url <- paste(base_url,  "venues/", venue, "/stocks/", stock, "/quote", sep="")
-    res <- httr::GET(url=url)
+    res <- httr::GET(url=url, ...)
     return(res)
 }
 get_orderbook <- function(venue, stock) {
@@ -241,10 +242,11 @@ new_quote <- function(quote) {
 ##     print(i)
 ##     orderbook.t[[i]] <- new_quote(quotes.parsed[[i]])
 ## }
-parse_ts <- function(order) {
-    myts <- lubridate::ymd_hms(order[["ts"]])
-    split <- unlist(strsplit(order[["ts"]], ".", fixed=TRUE))
+parse_ts <- function(order, timestamp) {
+    myts <- lubridate::ymd_hms(as.character(order[[timestamp]]))
+    split <- unlist(strsplit(as.character(order[[timestamp]]), ".", fixed=TRUE))
     millis <- stringr::str_extract(split[2], "[0-9]+")
+    browser()
     df <- return(data.frame(ymdhms=myts, milli=as.numeric(millis)))
 
 }
@@ -290,7 +292,9 @@ qlist_to_df <- function(quotelist) {
                     askSize=as.fnumeric(askSize),
                     bidDepth=as.fnumeric(bidDepth),
                     last=as.fnumeric(last),
-                    lastSize=as.fnumeric(lastSize))
+                    lastSize=as.fnumeric(lastSize),
+                    last_trade=lubridate::ymd_hms(lastTrade),
+                    quote_time=lubridate::ymd_hms(quoteTime))
     resdf
                     
                                  
