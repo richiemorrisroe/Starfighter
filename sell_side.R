@@ -1,5 +1,6 @@
 source("starfighter.R")
 source("starfighter_gm.R")
+
 tryCatch({
     level <- start_level("sell_side")
     if(content(level)$ok==TRUE) {
