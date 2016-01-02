@@ -42,7 +42,8 @@ parse_quote <- function(quote) {
 }    
 
 get_component <- function(x, component) {
-    res <- function (x) sapply(x, "[[", component=component)
+    res <- function (x) x[[component]]
+    res
 }
 ## ok <- get_component(component="ok")
 ## symbol <- get_component(component="symbol")
@@ -314,8 +315,11 @@ as.vector.quote <- function(quote) {
     quote@quoteTime )
 }
 get_tickertape <- function(account, venue, ...) {
-    base_ws<- "https://www.stockfighter.io/ob/api/"
+    base_ws<- "wss://api.stockfighter.io/ob/"
     url <- paste(base_ws, account, "/venues/", venue, "/tickertape", sep="")
-    res <- httr::GET(url, add_headers(api_key=apikey), ...)
+    res <- httr::GET(url, add_headers(api_key=apikey,
+                                      "Upgrade"="websocket",
+                                      "Connection"="Upgrade",
+                                      "Sec-Websocket-Version"="13"), ...)
     return(res)
 }
