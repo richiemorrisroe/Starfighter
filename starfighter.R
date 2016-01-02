@@ -540,7 +540,10 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
     parsed <- orderbook(parse_response(orders))
     buys <- floor(max(parsed@bids$price))
     sells <- floor(max(parsed@asks$price))
+    buy_qty <- floor(min(parsed@bids$qty))
+    sell_qty <- floor(min(parsed@asks$qty))
     prices <- c(buys, sells)
+    qties <- c(buy_qty, sell_qty)
     browser()
     cat(prices, "\n")
     }
