@@ -7,8 +7,8 @@ apikey <- scan("apikey.txt", what="char")
 
 
 direction <- "buy"
-quote <- get_quote("TESTEX", "FOOBAR")
-orderinfo <- get_bid(content(quote))
+quote <- get_quote("TESTEX", "FOOBAR") %>% parse_response()
+bids <- get_component(quote, "bid")
 qty <- orderinfo[2]
 price <- orderinfo[1]
 ord <- create_order(account="EXB123456", venue=venue, stock=stock, qty=qty, price=price, direction=direction, orderType="limit")
