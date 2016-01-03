@@ -3,6 +3,7 @@ require(methods)
 source("starfighter_gm.R")
 source("starfighter.R")
 args <- commandArgs(TRUE)
+name <- args[2]
 ## level <- start_level("chock_a_block")
 first <- start_level(args[1])
 contents_level <- content(first)
