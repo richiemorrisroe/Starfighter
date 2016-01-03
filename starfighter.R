@@ -209,7 +209,7 @@ setClass("orderbook",
          slots = list(ok="logical", venue="character",
                       symbol="character", ymdhms="POSIXt",
                       milliseconds="numeric",
-                      bids="data.frame", asks="data.frame"))
+                      bids="data.frame", asks="data.frame"), contains="list")
 setClass("quote",
          slots=list(ok="logical",
                     venue="character",
@@ -303,6 +303,32 @@ orderbook <- function(order) {
              asks=asks))
     orderbook
     }
+}
+setClass("orderbook-list", contains="orderbook")
+as.data.frame.orderbook <- function(orderbook) {
+    ordslots <- slotNames("orderbook")[
+        2:length(getSlots("orderbook"))]
+    ##subtract two for bid and asks, add 3 for the cols of ob@bids/@asks
+    totcols <- (length(ordslots))+1
+    askdim <- nrow(orderbook@asks)
+    biddim <- nrow(orderbook@bids)
+    dfs <- rbind(orderbook@bids, orderbook@asks)
+    resdim <- as.data.frame(matrix(NA,
+                                   nrow=sum(askdim, biddim),
+                                   ncol=totcols))
+    dfnames <- names(slot(orderbook, "bids"))
+    ## browser()
+    fullnames <- c(ordslots, dfnames)
+    ordslots2 <- ordslots[!(ordslots %in% c("bids", "asks"))]
+    names(dfs) <- dfnames
+    
+    for(i in 1:length(ordslots2)) {
+        cat("slot is ", ordslots[i], "\n")
+        ## browser()
+        current_slot <- rep(slot(orderbook, ordslots2[i]), times=nrow(dfs))
+        dfs[,ordslots2[i]] <- current_slot
+    }
+    dfs
 }
 ##' Creates an object of type quote from a named list returned by parse_response
 ##'
@@ -470,7 +496,7 @@ get_tickertape <- function(account, venue, ...) {
                                       "Sec-Websocket-Version"="13"), ...)
     return(res)
 }
-monitor <- function(venue, stock, level=level) {
+monitor <- function(venue, stock, level=level, name=name) {
     cat("Stock is ", ticker, " venue is ", venue, "\n")
     start_time <- Sys.time()
     ok <- TRUE
@@ -491,17 +517,19 @@ monitor <- function(venue, stock, level=level) {
             end_time <- Sys.time()
             cat("time taken ", end_time-new_time, "\n")
             ordlist
-            status <- change_instance(level, "") 
+            status <- change_instance(level, "")
+            browser()
             parsed_status <- parse_response(status)
-            if(status$state=="lost") {
+            print(parsed_status)
+            if(parsed_status$state != "open") {
                 break
             }
         }
     }, finally = {
         cat("reached finally", "\n")
-        myorders <- get_all_orders(
-        file.ord <- paste("orderlist_", args[1], ".rda", sep="")
-        file.quote <- paste("quotelist_", args[1], ".rda", sep="")
+        ## myorders <- get_all_orders(
+        file.ord <- paste("orderlist_", args[1], "_", args[2], ".rda", sep="")
+        file.quote <- paste("quotelist_", args[1], "_", args[2], ".rda", sep="")
         save(ordlist, file=file.ord)
         save(quotelist, file=file.quote)
         change_instance(level=level, "stop")
@@ -566,3 +594,26 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
     names(reslist) <- directions
     reslist
 }
+stupid_loop <- function(ordlist) {
+    reslist <- vector(mode="list", length=length(ordlist))
+    for(i in 1:length(ordlist)) {
+        reslist[[i]] <- as.data.frame.orderbook(ordlist[[i]])
+    }
+    reslist
+}
+##' Take a series of calls to get_orderbook, and return the results as a df
+##'
+##' See above. Will document the fields here later
+##' @title parse_orderlist
+##' @param orderlist a list of calls to get_orderbook 
+##' @return a dataframe containing columns titled price, qty, isBuy, ok, venue, symbol, ymdhms (the timestamp) and milliseconds
+##' @author richie
+parse_orderlist <- function(orderlist) {
+    odl2 <- orderlist[sapply(orderlist, function(x) !is.null(x))]
+    odlok <- odl2[sapply(odl2, function(x) x$ok == TRUE)]
+    od.ob <- sapply(odlok, parse_response) %>% orderbook()
+    od.df <- sapply(od.ob, as.data.frame.orderbook)
+    res <- do.call("rbind", od.df)
+    res
+}
+    
