@@ -250,20 +250,12 @@ spreads.orderbook <- function(orderbook) {
     biddims <- dim(na.omit(bids))
     askdims <- dim(na.omit(asks))
     if(biddims[1]==askdims[1] & askdims[1]>0) {
-    spread <- data.frame(bid_price=bids$price,
-                         bid_qty=bids$qty,
-                         ask_price=asks$price,
-                         ask_qty=asks$qty) %>%
-        dplyr::mutate(diff_price=ask_price-bid_price)
+        spread <- bids-asks
     }
     else {
-        spread <- data.frame(bid_price=NA,
-                             bid_qty=NA,
-                             ask_price=NA,
-                             ask_qty=NA,
-                             diff_price=NA)
+        
     }
-    spread
+    spread <- NA
 }
 ##' utility function for ensuring that bid/ask dfs do not return null
 ##' See description
@@ -566,6 +558,15 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
     while(any(is.na(prices))) {
     orders <- get_orderbook(venue, ticker)
     parsed <- orderbook(parse_response(orders))
+    status <- level_status(level=level)
+    status.p <- parse_response(status)
+    if(!is.null(status.p$flash)) {
+        flash <- status.p$flash
+        print(flash)
+    }
+    if(is.na(parsed@bids$price)) {
+        next
+    }
     buys <- floor(max(parsed@bids$price))
     sells <- floor(max(parsed@asks$price))
     buy_qty <- floor(min(parsed@bids$qty))
@@ -587,7 +588,7 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
                            price=prices[i],
                            qty=qty,
                            direction=directions[i],
-                           ordertype="market")
+                           ordertype=ordertype)
     placed <- place_order(venue=venue, stock=ticker, body=ord, apikey=apikey)
     reslist[[i]] <- placed
     }
@@ -610,9 +611,14 @@ stupid_loop <- function(ordlist) {
 ##' @author richie
 parse_orderlist <- function(orderlist) {
     odl2 <- orderlist[sapply(orderlist, function(x) !is.null(x))]
-    odlok <- odl2[sapply(odl2, function(x) x$ok == TRUE)]
-    od.ob <- sapply(odlok, parse_response) %>% orderbook()
-    od.df <- sapply(od.ob, as.data.frame.orderbook)
+    ## browser()
+    od.p <- lapply(odl2, parse_response)
+    
+    odlok <- od.p[sapply(od.p, function (x) x$ok==TRUE)]
+    ## browser()
+    od.ob <- odlok %>% sapply(., orderbook)
+    od.df <- lapply(od.ob, as.data.frame.orderbook)
+    ## browser()
     res <- do.call("rbind", od.df)
     res
 }
