@@ -23,34 +23,21 @@ tryCatch({
     }
     while(NAV<10000) {
         NAV <- position$NAV
-        current_book <- tryCatch({get_orderbook(venue=venue, stock=ticker)},
-                                           error=function(e) return(NA))
-        ordbook <- tryCatch({orderbook(parse_response(current_book))}, error=function(e) return(NA))
-        if(is.null(ordbook)) {
-            current_book <- get_orderbook(venue=venue, stock=ticker)
-            ordbook <- orderbook(parse_response(current_book))
-    
+        bids <- NULL
+        asks <- NULL
+        while(is.null(bids) | is.null(asks)) {
+            orderbook <- get_orderbook(venue=venue, stock=stock)
+            ob.p <- orderbook(orderbook) %>% parse_response()
+            bids <- ob.p@bids
+            asks <- ob.p@asks
         }
-        else {
-            sell_price <- min(ordbook@asks$price)-1
-            buy_price <- min(ordbook@bids$price)+1
+            sell_price <- min(ob.p@asks$price)+100
+            buy_price <- min(ob.p@bids$price)+100
             sell_qty <- min(ordbook@asks$qty)
             buy_qty <- min(ordbook@bids$qty)
-        }
-        if(!is.na(sell_price)) {
-            ord.buy <- create_order(account=account,
-                                venue=venue,
-                                stock=ticker,
-                                price=buy_price,
-                                qty=buy_qty,
-                                direction="buy",
-                                ordertype="limit")
-
-            placed.buy <- place_order(venue=venue, stock=ticker,
-                                       body=ord.buy,
-                                      apikey=apikey)
-            conbuy <- parse_response(placed.buy)
-            
+        market <- market_make(level=level, qty=100)
+        sold <- market$sell
+        bought <- market$bought
             if(length(conbuy$fills)>0) {
                 cat("bought ", conbuy$fills$qty, " shares", "\n")
                 position$bought <- position$bought+conbuy$totalFilled
