@@ -12,7 +12,7 @@ tryCatch({
     bill_position <- NA
     sell_price <- NA
     buy_price <- NA
-    max_stock <- 10000*100
+    max_stock <- 1000
     NAV <- position$NAV
     stocks <- get_tickers(venue=venue)
     print(parse_response(stocks))
