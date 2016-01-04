@@ -558,11 +558,13 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
     while(any(is.na(prices))) {
     orders <- get_orderbook(venue, ticker)
     parsed <- orderbook(parse_response(orders))
+    if(level!="TEST") {
     status <- level_status(level=level)
     status.p <- parse_response(status)
     if(!is.null(status.p$flash)) {
         flash <- status.p$flash
         print(flash)
+    }
     }
     if(is.na(parsed@bids$price)) {
         next
@@ -611,14 +613,10 @@ stupid_loop <- function(ordlist) {
 ##' @author richie
 parse_orderlist <- function(orderlist) {
     odl2 <- orderlist[sapply(orderlist, function(x) !is.null(x))]
-    ## browser()
     od.p <- lapply(odl2, parse_response)
-    
     odlok <- od.p[sapply(od.p, function (x) x$ok==TRUE)]
-    ## browser()
     od.ob <- odlok %>% sapply(., orderbook)
     od.df <- lapply(od.ob, as.data.frame.orderbook)
-    ## browser()
     res <- do.call("rbind", od.df)
     res
 }
