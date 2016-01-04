@@ -9,6 +9,7 @@ tryCatch({
     ticker <- get_component(level, "tickers")
     balance <- get_component(level, "balances")
     position <- data.frame("bought"=0, "sold"=0, "NAV"=0)
+    bill_position <- NA
     sell_price <- NA
     buy_price <- NA
     max_stock <- 10000*100
@@ -25,7 +26,7 @@ tryCatch({
         current_book <- tryCatch({get_orderbook(venue=venue, stock=ticker)},
                                            error=function(e) return(NA))
         ordbook <- tryCatch({orderbook(parse_response(current_book))}, error=function(e) return(NA))
-        if(is.na(ordbook)) {
+        if(is.null(ordbook)) {
             current_book <- get_orderbook(venue=venue, stock=ticker)
             ordbook <- orderbook(parse_response(current_book))
     
@@ -43,7 +44,7 @@ tryCatch({
                                 price=buy_price,
                                 qty=buy_qty,
                                 direction="buy",
-                                orderType="limit")
+                                ordertype="limit")
 
             placed.buy <- place_order(venue=venue, stock=ticker,
                                        body=ord.buy,
@@ -61,7 +62,7 @@ tryCatch({
                     price=sell_price,
                     qty=sell_qty,
                     direction="sell",
-                    orderType="limit")
+                    ordertype="limit")
                 placed.sell <- place_order(venue=venue,
                                            stock=ticker,
                                            body=ord.sell,
@@ -81,7 +82,3 @@ tryCatch({
         }
  }       
 }, finally=change_instance(level, "stop"))
-
-
-
-        
