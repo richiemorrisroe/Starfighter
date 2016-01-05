@@ -569,7 +569,7 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
     if(is.na(parsed@bids$price)) {
         next
     }
-    buys <- floor(max(parsed@bids$price))
+    buys <- ceiling(min(parsed@bids$price))
     sells <- floor(max(parsed@asks$price))
     buy_qty <- floor(min(parsed@bids$qty))
     sell_qty <- floor(min(parsed@asks$qty))
@@ -593,8 +593,16 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
     placed <- place_order(venue=venue, stock=ticker, body=ord, apikey=apikey)
     reslist[[i]] <- placed
     }
+    
     names(reslist) <- directions
-    reslist
+    
+    stat <- level_status(level=level)
+    sp <- stat %>% parse_response()
+    if(!is.null(sp$flash)) {
+    nums <- stringr::str_extract_all(unlist(stat[["flash"]]), "\\$[0-9]+")
+    cash <- nums[[1]][1]
+    NAV <-  nums[[1]][2]
+    }
 }
 stupid_loop <- function(ordlist) {
     reslist <- vector(mode="list", length=length(ordlist))
@@ -619,4 +627,30 @@ parse_orderlist <- function(orderlist) {
     res <- do.call("rbind", od.df)
     res
 }
+get_spreads <- function(venue, stock) {
+    bids <- NA
+    asks <- NA
+    nulls <- -1
+    while(is.na(all(bids)) | is.na(all(asks))) {
+        nulls <- nulls + 1
+        cat("There have been ", nulls, " nulls", "\n")
+        orderbook <- get_orderbook(venue=venue, stock=stock)
+        ob.p <- orderbook %>% parse_response() %>% orderbook()
+        ## browser()
+        bids <- ob.p@bids
+        asks <- ob.p@asks
+        ## browser()
+        spread <- median(asks$price, na.rm=TRUE)-median(bids$price, na.rm=TRUE)
+        bidqty <- ob.p@bids$qty
+        askqty <- ob.p@asks$qty
+        qty <- min(min(bidqty), min(askqty))
+        ob <- list(orderbook=ob.p, spread=spread, minqty=qty)
+        
+    }
+    return(ob)
+}
+trade <- function(orderbook, venue, stock, qty) {
+    target_spread <- floor(orderbook$spread*0.9)
     
+    return(target_spread)
+}
