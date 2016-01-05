@@ -575,7 +575,6 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
     sell_qty <- floor(min(parsed@asks$qty))
     prices <- c(buys, sells)
     qties <- c(buy_qty, sell_qty)
-    browser()
     cat(prices, "\n")
     }
     directions <- c("buy", "sell")

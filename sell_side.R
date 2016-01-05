@@ -22,7 +22,7 @@ tryCatch({
         level <- start_level("sell_side")
     }
     while(NAV<10000) {
-        NAV <- position$NAV
+        NAV <- 0
         bids <- NULL
         asks <- NULL
         while(is.null(bids) | is.null(asks)) {
