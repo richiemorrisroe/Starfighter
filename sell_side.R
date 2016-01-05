@@ -30,6 +30,8 @@ tryCatch({
             ob.p <- orderbook(orderbook) %>% parse_response()
             bids <- ob.p@bids
             asks <- ob.p@asks
+            spread <- median(asks$price)median(bids$price)
+            ob <- list(orderbook=od.p, spread=spread)
         }
             sell_price <- min(ob.p@asks$price)+100
             buy_price <- min(ob.p@bids$price)+100
