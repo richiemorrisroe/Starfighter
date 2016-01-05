@@ -582,19 +582,7 @@ market_make <- function(level, ordertype="limit", qty=NULL) {
         qty <- 1
     }
     reslist <- list()
-    for(i in 1:length(prices)) {
-        ord<- create_order(account=account,
-                           venue=venue,
-                           stock=ticker,
-                           price=prices[i],
-                           qty=qty,
-                           direction=directions[i],
-                           ordertype=ordertype)
-    placed <- place_order(venue=venue, stock=ticker, body=ord, apikey=apikey)
-    reslist[[i]] <- placed
-    }
-    
-    names(reslist) <- directions
+
     
     stat <- level_status(level=level)
     sp <- stat %>% parse_response()
@@ -649,8 +637,32 @@ get_spreads <- function(venue, stock) {
     }
     return(ob)
 }
-trade <- function(orderbook, venue, stock, qty) {
+trade <- function(orderbook, details=NULL) {
+    account <- details$account
+    venue <- details$venues
+    stock <- details$ticker
     target_spread <- floor(orderbook$spread*0.9)
+    ob <- orderbook[[1]]
+    buyprice <- median(ob@bids$price) + target_spread
+    sellprice <- median(ob@asks$price) - target_spread
+    qty <- ob$minqty
+    prices <- c(buyprice, sellprice)
+    directions <- c("buy", "sell")
+    reslist <- list()
+        for(i in 1:length(prices)) {
+        ord<- create_order(account=account,
+                           venue=venue,
+                           stock=stock,
+                           price=prices[i],
+                           qty=qty,
+                           direction=directions[i],
+                           ordertype="limit")
+    placed <- place_order(venue=venue, stock=stock, body=ord, apikey=apikey)
+    reslist[[i]] <- placed %>% parse_response()
+    }
     
-    return(target_spread)
+    names(reslist) <- directions
+    ob <- get_spreads(venue, stock)
+    return(list(trades=reslist, ob=ob))
 }
+
