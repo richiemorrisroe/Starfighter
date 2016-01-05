@@ -616,18 +616,16 @@ parse_orderlist <- function(orderlist) {
     res
 }
 get_spreads <- function(venue, stock) {
-    bids <- NA
-    asks <- NA
+    bids <- data.frame(price=NA, qty=NA, isBuy=NA)
+    asks <- data.frame(price=NA, qty=NA, isBuy=NA)
     nulls <- -1
-    while(is.na(all(bids)) | is.na(all(asks))) {
+    while(is.na(bids) | is.na(asks)) {
         nulls <- nulls + 1
         cat("There have been ", nulls, " nulls", "\n")
         orderbook <- get_orderbook(venue=venue, stock=stock)
         ob.p <- orderbook %>% parse_response() %>% orderbook()
-        ## browser()
         bids <- ob.p@bids
         asks <- ob.p@asks
-        ## browser()
         spread <- median(asks$price, na.rm=TRUE)-median(bids$price, na.rm=TRUE)
         bidqty <- ob.p@bids$qty
         askqty <- ob.p@asks$qty
