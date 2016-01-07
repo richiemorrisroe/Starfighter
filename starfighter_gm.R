@@ -8,10 +8,12 @@ apikey <- scan("apikey.txt", what="char")
 ##' @param level 
 ##' @return 
 ##' @author richie
-start_level <- function(level="first_steps") {
+start_level <- function(level="first_steps", ...) {
     base_gm <- "https://www.stockfighter.io/gm/levels/"
     url <- paste(base_gm, "/",level, sep="")
-    res <- httr::POST(url, add_headers("X-Starfighter-Authorization"=apikey))
+    res <- httr::POST(url,
+                      add_headers("X-Starfighter-Authorization"=apikey),
+                      ...)
 }
 ##' Change a level in some form (stop, resume etc)
 ##'
