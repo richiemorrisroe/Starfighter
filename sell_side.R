@@ -6,17 +6,16 @@ tryCatch({
     
     lp <- parse_response(level)
     levok <- TRUE
-    while(isTRUE(lp$ok)) {
+    while(isTRUE(levok)) {
         ls <- level_status(level)
-        browser()
         lsp <- ls %>% parse_response()
         levok <- lsp$ok
         print(lsp)
         venue <- unlist(lp$venue)
         stock <- unlist(lp$tickers)
         ob <- get_spreads(venue, stock)
-        print(ob)
-        trades <- trade(ob, details=lp)
+        print(lsp$flash$info)
+        trades <- trade(ob, details=lp, qty=50)
         ob <- trades[[1]]
         Sys.sleep(5)
     }
