@@ -45,7 +45,7 @@ create_order <- function(account, venue, stock, price, qty, direction, ordertype
 }
 place_order <- function(venue, stock, body, apikey) {
     url <- paste(base_url, "/venues/", venue, "/stocks/", stock, "/orders", sep="")
-    res <- httr::POST(url=url, body=body, encode="json", add_headers("X-Starfighter-Authorization"=apikey), verbose())
+    res <- httr::POST(url=url, body=body, encode="json", add_headers("X-Starfighter-Authorization"=apikey))
     
 }
 ##' Convert factor variable to numeric
@@ -619,7 +619,8 @@ get_spreads <- function(venue, stock) {
     bids <- data.frame(price=NA, qty=NA, isBuy=NA)
     asks <- data.frame(price=NA, qty=NA, isBuy=NA)
     nulls <- -1
-    while(is.na(bids) | is.na(asks)) {
+    spread <- NA
+    while(is.na(spread)) {
         nulls <- nulls + 1
         cat("There have been ", nulls, " nulls", "\n")
         orderbook <- get_orderbook(venue=venue, stock=stock)
@@ -629,21 +630,35 @@ get_spreads <- function(venue, stock) {
         spread <- median(asks$price, na.rm=TRUE)-median(bids$price, na.rm=TRUE)
         bidqty <- ob.p@bids$qty
         askqty <- ob.p@asks$qty
-        qty <- min(min(bidqty), min(askqty))
+        qty <- min(min(bidqty), min(askqty), na.rm=TRUE)
         ob <- list(orderbook=ob.p, spread=spread, minqty=qty)
         
     }
     return(ob)
 }
-trade <- function(orderbook, details=NULL) {
+trade <- function(orderbook, details=NULL, qty=NULL) {
+    if(details=="TEST") {
+        account <- "EXB123456"
+        venue <- "TESTEX"
+        stock <- "FOOBAR"
+    }
+    else {
     account <- details$account
     venue <- details$venues
     stock <- details$ticker
+    }
     target_spread <- floor(orderbook$spread*0.9)
     ob <- orderbook[[1]]
-    buyprice <- median(ob@bids$price) + target_spread
-    sellprice <- median(ob@asks$price) - target_spread
-    qty <- ob$minqty
+    buyprice <- median(ob@bids$price) - target_spread
+    sellprice <- median(ob@asks$price) + target_spread
+    cat("buying at ", buyprice, "\n",
+        "Selling at ", sellprice, "\n")
+    if(orderbook$minqty<30) {
+        qty <- qty
+    }
+    else {
+        qty <- orderbook$minqty
+    }
     prices <- c(buyprice, sellprice)
     directions <- c("buy", "sell")
     reslist <- list()
