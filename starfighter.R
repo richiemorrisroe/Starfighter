@@ -481,11 +481,12 @@ as.vector.quote <- function(quote) {
 ##' @author richie
 get_tickertape <- function(account, venue, ...) {
     base_ws<- "wss://api.stockfighter.io/ob/"
-    url <- paste(base_ws, account, "/venues/", venue, "/tickertape", sep="")
+    url <- paste(base_url, "ws/", account, "/venues/", venue, "/executions", sep="")
     res <- httr::GET(url, add_headers(api_key=apikey,
                                       "Upgrade"="websocket",
                                       "Connection"="Upgrade",
-                                      "Sec-Websocket-Version"="13"), ...)
+                                      "Sec-Websocket-Version"="13",
+                                      "Sec-Websocket-Key"="e23vsOnh1QGrwNI7ahsr7w==" ), ...)
     return(res)
 }
 monitor <- function(venue, stock, level=level, name=name) {
@@ -513,7 +514,7 @@ monitor <- function(venue, stock, level=level, name=name) {
             ## print(orders[length(orders)])
             ok <- content(orders[[length(orders)]])$ok
             end_time <- Sys.time()
-            cat("time taken ", end_time-new_time, "\n")
+            ## cat("time taken ", end_time-new_time, "\n")
             status <- change_instance(level, "")
             browser()
             parsed_status <- parse_response(status)
@@ -610,13 +611,25 @@ stupid_loop <- function(ordlist) {
 ##' @param orderlist a list of calls to get_orderbook 
 ##' @return a dataframe containing columns titled price, qty, isBuy, ok, venue, symbol, ymdhms (the timestamp) and milliseconds
 ##' @author richie
-parse_orderlist <- function(orderlist) {
-    odl2 <- orderlist[sapply(orderlist, function(x) !is.null(x))]
-    od.p <- lapply(odl2, parse_response)
-    odlok <- od.p[sapply(od.p, function (x) x$ok==TRUE)]
-    od.ob <- odlok %>% sapply(., orderbook)
-    od.df <- lapply(od.ob, as.data.frame.orderbook)
-    res <- do.call("rbind", od.df)
+parse_orderlist <- function(orderlist, parallel=TRUE) {
+    if(!parallel) {
+        odl2 <- orderlist[sapply(orderlist, function(x) !is.null(x))]
+        od.p <- lapply(odl2, parse_response)
+        odlok <- od.p[sapply(od.p, function (x) x$ok==TRUE)]
+        od.ob <- odlok %>% sapply(., orderbook)
+        od.df <- lapply(od.ob, as.data.frame.orderbook)
+        res <- do.call("rbind", od.df)
+        res
+    }
+    else {
+        odl2 <- orderlist[sapply(orderlist, function (x) !is.null(x))]
+        od.p <- lapply(odl2, function (x) lapply(x, parse_response))
+        odlok <- lapply(od.p, function (x) lapply(x, function (y) y$ok==TRUE))
+        od.ob <- odlok %>% lapply(., function (x) sapply(x, function (y) orderbook(y)))
+        od.df <- lapply(od.ob, function (x) lapply(x, function (y) as.data.frame.orderbook(y)))
+        browser()
+        res <- do.call("rbind", od.df)
+    }
     res
 }
 get_spreads <- function(venue, stock) {
@@ -657,12 +670,12 @@ trade <- function(orderbook, details=NULL, qty=NULL) {
     sellprice <- buyprice + 100
     cat("buying at ", buyprice, "\n",
         "Selling at ", sellprice, "\n")
-    if(orderbook$minqty<30) {
+    ## if(orderbook$minqty<30) {
         qty <- qty
-    }
-    else {
-        qty <- orderbook$minqty
-    }
+    ## }
+    ## else {
+    ##     qty <- orderbook$minqty
+    ## }
     prices <- c(buyprice, sellprice)
     directions <- c("buy", "sell")
     reslist <- list()
