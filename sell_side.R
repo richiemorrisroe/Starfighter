@@ -2,8 +2,8 @@ source("starfighter.R")
 source("starfighter_gm.R")
 
 tryCatch({
-    level <- start_level("sell_side")
-    system("Rscript monitor.R \"sell_side\" \"actions\"", wait=FALSE)
+    level <- start_level("dueling_bulldozers")
+    system("Rscript monitor.R \"dueling_bulldozers\" \"actions\"", wait=FALSE)
     lp <- parse_response(level)
     levok <- TRUE
     venue <- unlist(lp$venue)
