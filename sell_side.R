@@ -3,21 +3,31 @@ source("starfighter_gm.R")
 
 tryCatch({
     level <- start_level("sell_side")
-    
+    system("Rscript monitor.R \"sell_side\" \"actions\"", wait=FALSE)
     lp <- parse_response(level)
     levok <- TRUE
+    venue <- unlist(lp$venue)
+    stock <- unlist(lp$tickers)
+    account <- unlist(lp$account)
     while(isTRUE(levok)) {
         ls <- level_status(level)
         lsp <- ls %>% parse_response()
         levok <- lsp$ok
-        print(lsp)
-        venue <- unlist(lp$venue)
-        stock <- unlist(lp$tickers)
+        ## print(lsp)
         ob <- get_spreads(venue, stock)
         print(lsp$flash$info)
-        trades <- trade(ob, details=lp, qty=50)
+        trades <- trade(ob, details=lp,qty=40)
+        sold.p <- trades$trades$sell
+        buy.p <- trades$trades$buy
+        allord <- get_all_orders(venue, account) %>% parse_response()
+        orders <- allord$orders
+        position <- orders %>% filter(open==FALSE) %>% group_by(direction) %>% summarise(total_filled=sum(totalFilled))
+        openord <- filter(orders, open==TRUE)
+        print(position)
         ob <- trades[[1]]
-        Sys.sleep(5)
+        if(lsp$state=="lost") {
+            break
+        }
     }
         
 }, finally=change_instance(level, "stop"))
