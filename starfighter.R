@@ -493,26 +493,30 @@ monitor <- function(venue, stock, level=level, name=name) {
     start_time <- Sys.time()
     ok <- TRUE
     ##this is total overkill, but hey
-    ordlist <- vector(mode="list", length=2e5)
+    ordlist <- vector(mode="list", length=2e6)
     quotelist <- vector(mode="list", length=2e5)
     i <- 1
     tryCatch({
         while(ok) {
             new_time <- Sys.time()
-            orders <- try(get_orderbook(venue=venue, stock=stock))
+            cl <- parallel::makeForkCluster(nnodes=6)
+            listvars <- rep(list(c(venue, stock)), 50)
+            orders <- parallel::parLapply(cl,
+                                          listvars,
+                                          function (x) get_orderbook(venue=x[1], stock=x[2]))
+            parallel::stopCluster(cl=cl)
             quote <- get_quote(venue=venue, stock=stock)
             ordlist[[i]] <- orders
             quotelist[[i]] <- quote
             cat("iteration at ", i, "\n")
             i <- i + 1
-            ok <- content(orders)$ok
+            ## print(orders[length(orders)])
+            ok <- content(orders[[length(orders)]])$ok
             end_time <- Sys.time()
             cat("time taken ", end_time-new_time, "\n")
-            ordlist
             status <- change_instance(level, "")
             browser()
             parsed_status <- parse_response(status)
-            print(parsed_status)
             if(parsed_status$state != "open") {
                 break
             }
@@ -649,8 +653,8 @@ trade <- function(orderbook, details=NULL, qty=NULL) {
     }
     target_spread <- floor(orderbook$spread*0.9)
     ob <- orderbook[[1]]
-    buyprice <- median(ob@bids$price) - target_spread
-    sellprice <- median(ob@asks$price) + target_spread
+    buyprice <- min(ob@bids$price) + 1 
+    sellprice <- max(ob@asks$price) - 1
     cat("buying at ", buyprice, "\n",
         "Selling at ", sellprice, "\n")
     if(orderbook$minqty<30) {
