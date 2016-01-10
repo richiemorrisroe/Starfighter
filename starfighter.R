@@ -653,8 +653,8 @@ trade <- function(orderbook, details=NULL, qty=NULL) {
     }
     target_spread <- floor(orderbook$spread*0.9)
     ob <- orderbook[[1]]
-    buyprice <- min(ob@bids$price) + 1 
-    sellprice <- max(ob@asks$price) - 1
+    buyprice <- max(ob@bids$price) + 1
+    sellprice <- buyprice + 100
     cat("buying at ", buyprice, "\n",
         "Selling at ", sellprice, "\n")
     if(orderbook$minqty<30) {
