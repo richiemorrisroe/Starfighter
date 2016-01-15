@@ -2,8 +2,8 @@ source("starfighter.R")
 source("starfighter_gm.R")
 
 tryCatch({
-    level <- start_level("dueling_bulldozers")
-    system("Rscript monitor.R \"dueling_bulldozers\" \"actions\"", wait=FALSE)
+    level <- start_level("sell_side")
+    system("Rscript monitor.R \"sell_side\" \"actions\"", wait=FALSE)
     lp <- parse_response(level)
     levok <- TRUE
     venue <- unlist(lp$venue)
@@ -21,7 +21,7 @@ tryCatch({
         buy.p <- trades$trades$buy
         allord <- get_all_orders(venue, account) %>% parse_response()
         orders <- allord$orders
-        position <- orders %>% filter(open==FALSE) %>% group_by(direction) %>% summarise(total_filled=sum(totalFilled))
+        position <- get_position(allord)
         openord <- filter(orders, open==TRUE)
         print(position)
         ob <- trades[[1]]
