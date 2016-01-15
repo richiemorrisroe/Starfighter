@@ -472,8 +472,9 @@ as.vector.quote <- function(quote) {
 }
 ##' An attempt at using the websocket endpoints.
 ##'
-##' it appears that httr and curl don't support wss endpoints. I suspect that with some care, an upgrade request can be sent as per the spec (which allows for a HTTP response)
-##' @title 
+##' it appears that httr and curl don't support wss endpoints. I suspect that with some care, an upgrade request can be sent as per the spec (which allows for a HTTP response). This turned out to be true, I can get the server upgrade response, but I can't seem to parse it correctly (yet)
+
+##' @title get_tickertape
 ##' @param account 
 ##' @param venue 
 ##' @param ... 
@@ -696,3 +697,18 @@ trade <- function(orderbook, details=NULL, qty=NULL) {
     return(list(trades=reslist, ob=ob))
 }
 
+get_position <- function(orders) {
+    ord2 <- orders$orders
+    if(sum(ord2$totalFilled)==0) {
+        return(data.frame(direction=NA, spend2=NA, total_filled=0, ppu=0))
+    }
+    fills <- select(ord2, id, direction, fills, totalFilled)
+    fills2 <- tidyr::unnest(fills)
+    pos <- fills2 %>%
+        mutate(spend=price*qty) %>%
+        group_by(direction) %>%
+        summarise(spend2=sum(spend),
+                  total_filled=sum(totalFilled)) %>%
+        mutate(ppu=spend2/total_filled)
+    pos
+}
